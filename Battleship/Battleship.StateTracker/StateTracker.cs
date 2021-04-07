@@ -5,18 +5,24 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using Battleship.StateTracker.Exceptions;
+using Battleship.StateTracker.Extensions;
+using Battleship.StateTracker.Factories;
 
 namespace Battleship.StateTracker
 {
 	public class StateTracker
 	{
-		
-		private Dictionary<CellState, List<CellState>> legitimateStateTransitions;
+
+		private readonly Dictionary<CellState, List<CellState>> legitimateStateTransitions;
+		private List<Ship> ships;
+		private readonly IShipFactory shipFactory;
 		public Board Board { get; private set; }
-		public StateTracker(Board board)
+		public StateTracker(Board board, IShipFactory shipFactory)
 		{
 			Board = board ?? throw new ArgumentNullException(nameof(board));
+			this.shipFactory = shipFactory ?? throw new ArgumentNullException(nameof(board));
 			legitimateStateTransitions = CreateLegitimateStateTransitions();
+			ships = new List<Ship>();
 		}
 
 		private Dictionary<CellState, List<CellState>> CreateLegitimateStateTransitions()
@@ -30,14 +36,40 @@ namespace Battleship.StateTracker
 			};
 		}
 
-		private bool isLegitimateMove(CellState sourceState, CellState targetState)
+		private bool IsLegitimateMove(CellState sourceState, CellState targetState)
 		{
 			return legitimateStateTransitions.ContainsKey(sourceState) &&
 				legitimateStateTransitions[sourceState].Contains(targetState);
 		}
+		private void ValidateCurrentGameStatus(params GameStatus[] legitimateGameStatuses)
+		{
+			if ((legitimateGameStatuses?.Count() ?? 0) == 0)
+			{
+				return;
+			}
+
+			var gameStatus = this.GetGameStatus();
+			if (!legitimateGameStatuses.Contains(gameStatus))
+			{
+				throw new InvalidGameStatusException(gameStatus);
+			}
+		}
+		private CellState? GetAttachTargetState(CellState sourceState)
+		{
+			switch (sourceState)
+			{
+				case CellState.Hit: return null;
+				case CellState.Miss: return null;
+				case CellState.Occupied: return CellState.Hit;
+				case CellState.Vacant: return CellState.Miss;
+				default: return null;
+			}
+		}
 
 		public void BuildBoard()
 		{
+			ValidateCurrentGameStatus(GameStatus.NotSetUp);
+
 			var columns = Enum.GetValues(typeof(ColumnIndexes)).Cast<ColumnIndexes>().ToList();
 			var rows = Enum.GetValues(typeof(RowIndexes)).Cast<RowIndexes>().ToList();
 
@@ -51,7 +83,30 @@ namespace Battleship.StateTracker
 				Board.AddBoardCell(cell); // Cell additions is done only via StateTracker so that required validations are applied before-hand.
 			}));
 		}
+		public Ship AddShip(List<BoardCellLocation> cellLocations)
+		{
+			ValidateCurrentGameStatus(GameStatus.NotSetUp, GameStatus.NotStarted);
 
+			cellLocations = cellLocations ?? throw new ArgumentNullException(nameof(cellLocations));
+			var verticallyAdjacent = cellLocations.AreVerticallyAdjacent();
+			var horizontallyAdjacent = cellLocations.AreHorizontallyAdjacent();
+			if ((!verticallyAdjacent) && (!horizontallyAdjacent))
+			{
+				throw new CellsNotAdjacentException(cellLocations);
+			}
+
+			var targetCells = Board.GetCells().Where(x => cellLocations.Exists(y => x.Location == y)).ToList();
+			var nonVacantCell = targetCells.FirstOrDefault(x => x.State != CellState.Vacant);
+			if (nonVacantCell != null)
+			{
+				throw new CellsNotVacantException(nonVacantCell.Location);
+			}
+			var ship = shipFactory.Create(cellLocations);
+			targetCells.ForEach(x => x.SetState(CellState.Occupied));
+			ships.Add(ship);
+
+			return ship;
+		}
 		public void TransitionCellState(BoardCell boardCell, CellState targetState)
 		{
 			if (boardCell == null)
@@ -59,23 +114,38 @@ namespace Battleship.StateTracker
 				throw new ArgumentNullException(nameof(boardCell));
 			}
 
-			var gameStatus = GetGameStatus();
-			if (gameStatus != GameStatus.InProgress)
-			{
-				throw new GameStatusProhibitingException(gameStatus);
-			}
+			ValidateCurrentGameStatus(GameStatus.InProgress, GameStatus.NotStarted);
 
-			if (!isLegitimateMove(boardCell.State, targetState))
+			if (!IsLegitimateMove(boardCell.State, targetState))
 			{
 				throw new IllegitimateTransitionException(boardCell, targetState);
 			}
 
 			boardCell.SetState(targetState);
 		}
+		public CellState Attack(BoardCellLocation location)
+		{
+			if (location == null)
+			{
+				throw new ArgumentNullException(nameof(location));
+			}
+			ValidateCurrentGameStatus(GameStatus.InProgress, GameStatus.NotStarted);
+			var boardCell = Board.GetCells().Where(x => x.Location == location).FirstOrDefault()
+				?? throw new CellNotFoundException(location);
+
+			var targetState = GetAttachTargetState(boardCell.State)
+				?? throw new IllegitimateTransitionException(boardCell, CellState.Hit);
+
+			TransitionCellState(boardCell, targetState);
+			return targetState;
+		}
 
 		public GameStatus GetGameStatus()
 		{
-			//todo: check ships are placed or not....
+			if (ships.Count == 0)
+			{
+				return GameStatus.NotSetUp;
+			}
 
 			var cells = Board.GetCells()?.ToList() ?? new List<BoardCell>();
 			if (cells.Count == 0)
@@ -83,8 +153,8 @@ namespace Battleship.StateTracker
 				return GameStatus.NotSetUp;
 			}
 
-			var countOfTransitionedCells = cells.Where(x => x.State != CellState.Occupied).Count();
-			if (countOfTransitionedCells == 0)
+			var countOfAttacks = cells.Where(x => x.State != CellState.Vacant && x.State != CellState.Occupied).Count();
+			if (countOfAttacks == 0)
 			{
 				return GameStatus.NotStarted;
 			}

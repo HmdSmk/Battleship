@@ -1,5 +1,7 @@
-﻿using Battleship.StateTracker.Models;
+﻿using Battleship.StateTracker.Factories;
+using Battleship.StateTracker.Models;
 using System;
+using System.Collections.Generic;
 
 namespace Battleship.StateTracker.Bootstrap
 {
@@ -7,9 +9,12 @@ namespace Battleship.StateTracker.Bootstrap
 	{
 		static void Main(string[] args)
 		{
-			var board = new Board();
-			var stateTracker = new StateTracker(board);
-			stateTracker.BuildBoard();
+			IShipFactory shipFactory = new ShipFactory();
+			var sampleScenarios = new SampleScenarios(shipFactory);
+
+			sampleScenarios.RunHappyPathWithVerticalShip();
+			sampleScenarios.RunHappyPathWithHorizontalShip();
+
 		}
 	}
 }

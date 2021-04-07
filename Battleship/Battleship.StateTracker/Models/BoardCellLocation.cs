@@ -23,7 +23,7 @@ namespace Battleship.StateTracker.Models
 
 		public static bool operator ==(BoardCellLocation left, BoardCellLocation right)
 		{
-			if (left == null || right == null)
+			if (left?.Column == null || left?.Row == null || right?.Column == null || right?.Row == null)
 			{
 				return false;
 			}
@@ -33,7 +33,7 @@ namespace Battleship.StateTracker.Models
 
 		public static bool operator !=(BoardCellLocation left, BoardCellLocation right)
 		{
-			if (left == null || right == null)
+			if (left?.Column == null || left?.Row == null || right?.Column == null || right?.Row == null)
 			{
 				return false;
 			}

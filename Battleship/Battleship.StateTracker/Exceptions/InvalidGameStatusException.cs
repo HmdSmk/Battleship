@@ -6,11 +6,11 @@ using System.Text;
 
 namespace Battleship.StateTracker.Exceptions
 {
-	public class GameStatusProhibitingException : Exception
+	public class InvalidGameStatusException : Exception
 	{
 		public GameStatus GameStatus { get; private set; }
-		public GameStatusProhibitingException(GameStatus gameStatus)
-			: base(nameof(GameStatusProhibitingException))
+		public InvalidGameStatusException(GameStatus gameStatus)
+			: base(nameof(InvalidGameStatusException))
 		{
 			GameStatus = gameStatus;
 		}
