@@ -21,5 +21,10 @@ namespace Battleship.StateTracker.Models
 		public Board Board { get; private set; }
 		public CellState State { get; private set; }
 		public BoardCellLocation Location { get; private set; }
+
+		internal void SetState (CellState newState)
+		{
+			State = newState;
+		}
 	}
 }

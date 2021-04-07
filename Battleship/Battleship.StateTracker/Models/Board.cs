@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Battleship.StateTracker.Enums;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Battleship.StateTracker.Models
@@ -24,6 +26,10 @@ namespace Battleship.StateTracker.Models
 		internal bool CellExists(BoardCell cell)
 		{
 			return cells.Exists(x => x.Location.Equals(cell.Location));
+		}
+		internal BoardCell[] GetCells()
+		{
+			return cells.ToArray();
 		}
 	}
 }
