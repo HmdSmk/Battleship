@@ -10,7 +10,7 @@ using Battleship.StateTracker.Factories;
 
 namespace Battleship.StateTracker
 {
-	public class StateTracker
+	public class StateTracker : IStateTracker
 	{
 
 		private readonly Dictionary<CellState, List<CellState>> legitimateStateTransitions;

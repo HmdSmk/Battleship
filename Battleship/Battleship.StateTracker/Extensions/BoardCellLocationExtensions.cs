@@ -21,7 +21,8 @@ namespace Battleship.StateTracker.Extensions
 			}
 
 			var sortedCellValues = cells.OrderBy(x => Convert.ToInt32(x.Column)).ToList().Select(x => Convert.ToInt32(x.Column)).ToList();
-			return AreAdjacent(sortedCellValues);
+			return AreAdjacent(sortedCellValues)// all cells adjacent vertically
+				&& cells.Select(x=>x.Row).Distinct().Count() == 1; // and all are on the same column
 		}
 
 		public static bool AreHorizontallyAdjacent(this List<BoardCellLocation> cells)
@@ -37,7 +38,8 @@ namespace Battleship.StateTracker.Extensions
 			}
 
 			var sortedCellValues = cells.OrderBy(x => Convert.ToInt32(x.Row)).ToList().Select(x => Convert.ToInt32(x.Row)).ToList();
-			return AreAdjacent(sortedCellValues);
+			return AreAdjacent(sortedCellValues) // all cells adjacent horizontally
+				&& cells.Select(x=>x.Column).Distinct().Count() == 1; // and all are on the same row
 		}
 
 		private static bool AreAdjacent(List<int> sortedCellValues)

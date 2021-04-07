@@ -9,10 +9,10 @@ namespace Battleship.StateTracker.Bootstrap
 {
 	public class SampleScenarios
 	{
-		private IShipFactory shipFactory;
-		public SampleScenarios(IShipFactory shipFactory)
+		private IStateTrackerFactory stateTrackerFactory;
+		public SampleScenarios(IStateTrackerFactory stateTrackerFactory)
 		{
-			this.shipFactory = shipFactory ?? throw new ArgumentNullException(nameof(shipFactory));
+			this.stateTrackerFactory = stateTrackerFactory ?? throw new ArgumentNullException(nameof(stateTrackerFactory));
 		}
 
 		public void RunHappyPathWithVerticalShip()
@@ -44,32 +44,70 @@ namespace Battleship.StateTracker.Bootstrap
 			Log($"---------------------");
 		}
 
-		private void Run(List<BoardCellLocation> shipLocations)
+		public void RunUnHappyPath1()
 		{
-			var board = new Board();
-			var stateTracker = new StateTracker(board, shipFactory);
+			Log($"Starting : {nameof(RunUnHappyPath1)}");
+			var shipLocations = new List<BoardCellLocation>()
+			{
+				new BoardCellLocation(Enums.ColumnIndexes.ColA, Enums.RowIndexes.Row0),
+				new BoardCellLocation(Enums.ColumnIndexes.ColC, Enums.RowIndexes.Row1),
+				new BoardCellLocation(Enums.ColumnIndexes.ColC, Enums.RowIndexes.Row2),
+				new BoardCellLocation(Enums.ColumnIndexes.ColC, Enums.RowIndexes.Row3),
+			};
 
-			LogGameStatus(stateTracker);
-
-			Log($"Building board");
-			stateTracker.BuildBoard();
-			LogGameStatus(stateTracker);
-
-			//var logText = shipLocations.Select(x => x.ToString()).ToList<string>();
-			Log($"Adding ship to : {string.Join(",", shipLocations.Select(x => x.ToString()).ToList<string>())}");
-			stateTracker.AddShip(shipLocations);
-			LogGameStatus(stateTracker);
-
-			shipLocations.ForEach
-				(x =>
-				{
-					Log($"Attacking : ({x.ToString()})");
-					stateTracker.Attack(x);
-					LogGameStatus(stateTracker);
-				});
+			Run(shipLocations);
+			Log($"---------------------");
 		}
 
-		private void LogGameStatus(StateTracker stateTracker)
+		public void RunUnHappyPath2()
+		{
+			Log($"Starting : {nameof(RunUnHappyPath2)}");
+			var shipLocations = new List<BoardCellLocation>()
+			{
+				new BoardCellLocation(Enums.ColumnIndexes.ColC, Enums.RowIndexes.Row5),
+				new BoardCellLocation(Enums.ColumnIndexes.ColC, Enums.RowIndexes.Row1),
+				new BoardCellLocation(Enums.ColumnIndexes.ColC, Enums.RowIndexes.Row2),
+				new BoardCellLocation(Enums.ColumnIndexes.ColC, Enums.RowIndexes.Row3),
+			};
+
+			Run(shipLocations);
+			Log($"---------------------");
+		}
+
+		private bool Run(List<BoardCellLocation> shipLocations)
+		{
+			try
+			{
+				IStateTracker stateTracker = stateTrackerFactory.Create();
+
+				LogGameStatus(stateTracker);
+
+				Log($"Building board");
+				stateTracker.BuildBoard();
+				LogGameStatus(stateTracker);
+
+				//var logText = shipLocations.Select(x => x.ToString()).ToList<string>();
+				Log($"Adding ship to : {string.Join(",", shipLocations.Select(x => x.ToString()).ToList<string>())}");
+				stateTracker.AddShip(shipLocations);
+				LogGameStatus(stateTracker);
+
+				shipLocations.ForEach
+					(x =>
+					{
+						Log($"Attacking : ({x.ToString()})");
+						stateTracker.Attack(x);
+						LogGameStatus(stateTracker);
+					});
+				return true;
+			}
+			catch (Exception ex)
+			{
+				Log(ex.Message);
+				return false;
+			}
+		}
+
+		private void LogGameStatus(IStateTracker stateTracker)
 		{
 			Log($"Game Status : {stateTracker.GetGameStatus()}");
 		}

@@ -10,10 +10,13 @@ namespace Battleship.StateTracker.Bootstrap
 		static void Main(string[] args)
 		{
 			IShipFactory shipFactory = new ShipFactory();
-			var sampleScenarios = new SampleScenarios(shipFactory);
+			IStateTrackerFactory stateTrackerFactory = new StateTrackerFactory(shipFactory);
+			var sampleScenarios = new SampleScenarios(stateTrackerFactory);
 
 			sampleScenarios.RunHappyPathWithVerticalShip();
 			sampleScenarios.RunHappyPathWithHorizontalShip();
+			sampleScenarios.RunUnHappyPath1();
+			sampleScenarios.RunUnHappyPath2();
 
 		}
 	}
