@@ -6,9 +6,24 @@ namespace Battleship.StateTracker.Models
 {
 	public class Board
 	{
-		public BoardCell CreateBoardCell(BoardCellLocation location)
+		private List<BoardCell> cells;
+		public Board()
+		{
+			cells = new List<BoardCell>();
+		}
+		internal BoardCell CreateBoardCell(BoardCellLocation location)
 		{
 			return new BoardCell(this, location);
+		}
+
+		internal void AddBoardCell(BoardCell cell)
+		{
+			cells.Add(cell);
+		}
+
+		internal bool CellExists(BoardCell cell)
+		{
+			return cells.Exists(x => x.Location.Equals(cell.Location));
 		}
 	}
 }

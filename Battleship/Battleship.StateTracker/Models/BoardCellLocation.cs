@@ -8,6 +8,11 @@ namespace Battleship.StateTracker.Models
 {
 	public class BoardCellLocation
 	{
+		public BoardCellLocation(ColumnIndexes column, RowIndexes row)
+		{
+			Column = column;
+			Row = row;
+		}
 		public ColumnIndexes Column { get; }
 		public RowIndexes Row { get; }
 
@@ -15,5 +20,26 @@ namespace Battleship.StateTracker.Models
 		{
 			return $"{Column}:{Row}";
 		}
+
+		public static bool operator ==(BoardCellLocation left, BoardCellLocation right)
+		{
+			if (left == null || right == null)
+			{
+				return false;
+			}
+
+			return left.Column == right.Column && left.Row == right.Row;
+		}
+
+		public static bool operator !=(BoardCellLocation left, BoardCellLocation right)
+		{
+			if (left == null || right == null)
+			{
+				return false;
+			}
+
+			return !(left.Column == right.Column && left.Row == right.Row);
+		}
+
 	}
 }

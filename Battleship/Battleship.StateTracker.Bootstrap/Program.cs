@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Battleship.StateTracker.Models;
+using System;
 
 namespace Battleship.StateTracker.Bootstrap
 {
@@ -6,6 +7,9 @@ namespace Battleship.StateTracker.Bootstrap
 	{
 		static void Main(string[] args)
 		{
+			var board = new Board();
+			var stateTracker = new StateTracker(board);
+			stateTracker.BuildBoard();
 		}
 	}
 }
